@@ -23,12 +23,12 @@ In a terminal window, execute the command below to put the emulated port waiting
 
 ```console
 user@machine:~$ sudo javino listen /dev/ttyVBComm0
-Hello Chon!
+HelloChonBot!
 ```
 Open another terminal window and run the below command. On the first terminal Window. It should appear the 'Hello Chon!' message.
 
 ```console
-user@machine:~$ sudo javino send /dev/ttyVB0 "Hello ChonBot!"
+user@machine:~$ sudo javino send /dev/ttyVB0 "HelloChonBot!"
 ```
 
 ## Copyright
