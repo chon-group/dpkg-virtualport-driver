@@ -1,31 +1,14 @@
-# VirtualBot
-This is a simulator device for MAS systems communicating via Javino.
+# VirtualBot Driver
+It is a serial port simulator for communication between Multi-agent Systems and a ChonBot virtualized.
 
 ## Installation
-
 1) Install the dependencies. On your Debian-like Linux machine, run:
 
+```console
+user@machine:~$ echo "deb [trusted=yes] http://packages.chon.group/ chonos main" | sudo tee /etc/apt/sources.list.d/chonos.list
+user@machine:~$ sudo apt update
+user@machine:~$ sudo apt install linux-headers-`uname -r` chonos-virtualbot-driver
 ```
-sudo apt install linux-headers-`uname -r` gcc binutils make
-```
-
-2) Inside the virtualbot_serial folder, run:
-
-```
-sudo make clean all
-sudo make modules_install
-sudo make install
-```
-
-## Uninstallation
-
-Inside the 'virtualbot_serial' folder, run: 
-
-```
-sudo make uninstall
-```
-
-## Use 
 
 After the installation, by default, it will be instatiated on /dev many pairs of devices:
 
@@ -35,16 +18,15 @@ After the installation, by default, it will be instatiated on /dev many pairs of
 
 And so on. Writing on one device will make its content to be read on the other pair, and vice-versa
 
-Example:
-1) Open a terminal window and run:
-```
-screen /dev/ttyVB0
-```
-The device will be put on waiting for incoming data
+### Example:
+In a terminal window, execute the command below to put the emulated port waiting for incoming data
 
-2) Open another terminal window and run:
+```console
+user@machine:~$ sudo javino listen /dev/ttyVBComm0
+Hello Chon!
 ```
-echo "XYZ" > /dev/ttyVBComm0
-```
-Return to the first terminal Window. It should appear the 'XYZ' on it.
+Open another terminal window and run the below command. On the first terminal Window. It should appear the 'Hello Chon!' message.
 
+```console
+user@machine:~$ sudo javino send /dev/ttyVB0 "Hello ChonBot!"
+```

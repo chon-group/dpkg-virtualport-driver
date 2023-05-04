@@ -1,2 +1,2 @@
 #!/bin/bash
-/usr/bin/chonos-virtualbot-driver install
+/opt/chonos-embMAS/lib/virtualbot/driver install

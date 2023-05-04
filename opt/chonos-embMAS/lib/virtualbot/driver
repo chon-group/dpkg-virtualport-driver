@@ -4,14 +4,17 @@ if [ "$1" = "start"]
 then
 	modprobe virtualbot
 elif [ "$1" = "stop" ]
+then
 	modprobe -r virtualbot
 elif [ "$1" = "install" ]
+then
 	cd /opt/chonos-embMAS/lib/virtualbot_serial
 	make clean all
 	make modules_install
 	make install
 	echo virtualbot >> /etc/modules
 elif [ "$1" = "uninstall"]
+then
 	cd /opt/chonos-embMAS/lib/virtualbot_serial
 	modprob -r virtualbot
 	make uninstall
