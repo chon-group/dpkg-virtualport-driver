@@ -1,0 +1,14 @@
+Package: chonos-virtualbot-driver
+Version: 0.2.0
+Priority:
+Architecture: all
+Essential:
+Depends: javino
+Pre-depends: gcc, binutils, make
+Suggests:
+Installed-Size:
+Maintainer: chon@grupo.cefet-rj.br
+Conflicts:
+Replaces:
+Provides:
+Description: ChonOS ttyVB Service 
