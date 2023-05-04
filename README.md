@@ -18,7 +18,7 @@ After the installation, by default, it will be instatiated on /dev many pairs of
 
 And so on. Writing on one device will make its content to be read on the other pair, and vice-versa
 
-### Example:
+## Example
 In a terminal window, execute the command below to put the emulated port waiting for incoming data
 
 ```console
@@ -30,3 +30,6 @@ Open another terminal window and run the below command. On the first terminal Wi
 ```console
 user@machine:~$ sudo javino send /dev/ttyVB0 "Hello ChonBot!"
 ```
+
+## Copyright
+Copyright (C) 2023 [Bruno Policarpo](https://github.com/bptfreitas)
