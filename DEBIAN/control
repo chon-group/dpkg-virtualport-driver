@@ -3,7 +3,7 @@ Version: 1.0.0
 Priority:
 Architecture: all
 Essential:
-Depends: javino
+Depends: javino (>= 1.5.0)
 Pre-depends: gcc, binutils, make
 Suggests:
 Installed-Size:
