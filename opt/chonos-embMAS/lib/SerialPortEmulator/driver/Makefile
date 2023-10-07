@@ -17,6 +17,8 @@ VIRTUALBOT_DEVICE=/dev/virtualbot
 # setup-environment: configures environment for module development
 # For Debian systems, start by using 'apt install make binutils'
 # 1) It downloads the current system kernel headers 
+setup_dev_environment:
+	apt install linux-headers-`uname -r` make gcc binutils
 
 all: 
 	$(MAKE) -C $(KDIR) M=$$PWD modules
@@ -40,8 +42,8 @@ check_device_logs:
 
 install:
 	modprobe virtualbot
-	chmod a+rw /dev/ttyVB0
-	chmod a+rw /dev/ttyVBComm0
+	chmod a+rw /dev/ttyEmulatedPort0
+	chmod a+rw /dev/ttyExogenous0
 
 uninstall:
 	rm -f /dev/virtualbot

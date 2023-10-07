@@ -1,2 +1,2 @@
 #!/bin/bash
-/opt/chonos-embMAS/lib/virtualbot/driver uninstall
+/opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot install

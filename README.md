@@ -1,4 +1,4 @@
-# VirtualBot Driver
+# Serial Port Emulator
 It is a serial port simulator for communication between Multi-agent Systems and a ChonBot virtualized.
 
 ## Installation
@@ -7,13 +7,15 @@ It is a serial port simulator for communication between Multi-agent Systems and 
 ```console
 user@machine:~$ echo "deb [trusted=yes] http://packages.chon.group/ chonos main" | sudo tee /etc/apt/sources.list.d/chonos.list
 user@machine:~$ sudo apt update
-user@machine:~$ sudo apt install linux-headers-`uname -r` chonos-virtualbot-driver
+user@machine:~$ sudo apt install linux-headers-`uname -r` chonos-serial-port-emulator
 ```
 
 After the installation, by default, it will be instatiated on /dev many pairs of devices:
 
-- /dev/ttyVB0 <---> /dev/ttyVBComm0
-- /dev/ttyVB1 <---> /dev/ttyVBComm1
+- /dev/ttyEmulatedPort0 <---> /dev/ttyExogenous0
+- /dev/ttyEmulatedPort1 <---> /dev/ttyExogenous1
+- /dev/ttyEmulatedPort2 <---> /dev/ttyExogenous2
+- /dev/ttyEmulatedPort3 <---> /dev/ttyExogenous3
 ...
 
 And so on. Writing on one device will make its content to be read on the other pair, and vice-versa
@@ -32,4 +34,25 @@ user@machine:~$ sudo javino send /dev/ttyVB0 "HelloChonBot!"
 ```
 
 ## Copyright
-Copyright (C) 2023 [Bruno Policarpo](https://github.com/bptfreitas)
+<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />ChonIDE is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>. The licensor cannot revoke these freedoms as long as you follow the license terms:
+
+* __Attribution__ — You must give __appropriate credit__ like below:
+
+FREITAS, Bruno Policarpo Toledo; LAZARIN, Nilson Mori; PANTOJA, Carlos Eduardo. Uma Proposta de Emulador de Portas Seriais para Sistemas Multiagentes Embarcados. _In_: Workshop-Escola de Sistemas de Agentes, seus Ambientes e Aplicações (WESAAC), 17. , 2023, Pelotas/RS. Anais [...]. Pelotas: UFPel, 2023 . p. 55-66. URL: [https://zenodo.org/record/8329081](https://www.researchgate.net/publication/373484449_Uma_Proposta_de_Emulador_de_Portas_Seriais_para_Sistemas_Multiagentes_Embarcados)
+
+### Bibtex
+
+```
+@inproceedings{freitas2023,
+ author = {Freitas, Bruno Policarpo Toledo and Lazarin, Nilson Mori and Pantoja, Carlos Eduardo},
+ title = {Uma {Proposta} de {Emulador} de {Portas} {Seriais} para {Sistemas} {Multiagentes} {Embarcados}},
+ booktitle = {Anais do XVII Workshop-Escola de Sistemas de Agentes, seus Ambientes e Aplicações (WESAAC 2023)},
+ location = {Pelotas/RS},
+ year = {2023},
+ pages = {55--66},
+ publisher = {UFPel},
+ address = {Pelotas, RS, Brasil},
+ url = {https://zenodo.org/record/8329081}
+}
+
+```

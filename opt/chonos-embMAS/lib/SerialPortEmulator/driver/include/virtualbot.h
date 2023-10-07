@@ -4,17 +4,15 @@
 
 #include <linux/module.h>
 
-#define DEVICE_NAME "virtualbot"
+#define VIRTUALBOT_DRIVER_NAME "emulatedport_tty"
 
-#define VIRTUALBOT_DRIVER_NAME "virtualbot_tty"
-
-#define VIRTUALBOT_TTY_NAME "ttyVB"
+#define VIRTUALBOT_TTY_NAME "ttyEmulatedPort"
 
 #define VIRTUALBOT_TTY_MAJOR 200
 
-#define VB_COMM_DRIVER_NAME "vb-comm_tty"
+#define VB_COMM_DRIVER_NAME "exogenous_tty"
 
-#define VB_COMM_TTY_NAME "ttyVBComm"
+#define VB_COMM_TTY_NAME "ttyExogenous"
 
 #define VB_COMM_TTY_MAJOR (VIRTUALBOT_TTY_MAJOR + 1)
 
@@ -36,6 +34,10 @@
 */
 #define VIRTUALBOT_TOTAL_SIGNALS 10
 
+
+/**
+ * This buffer is needed to stop the ACK sent by the receiving device 
+*/
 #define IGNORE_CHAR_CBUFFER_SIZE 512
 
 struct virtualbot_dev {
