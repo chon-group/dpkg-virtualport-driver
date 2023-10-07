@@ -5,9 +5,9 @@ It is a serial port simulator for communication between Multi-agent Systems and 
 1) Install the dependencies. On your Debian-like Linux machine, run:
 
 ```console
-user@machine:~$ echo "deb [trusted=yes] http://packages.chon.group/ chonos main" | sudo tee /etc/apt/sources.list.d/chonos.list
-user@machine:~$ sudo apt update
-user@machine:~$ sudo apt install linux-headers-`uname -r` chonos-serial-port-emulator
+echo "deb [trusted=yes] http://packages.chon.group/ chonos main" | sudo tee /etc/apt/sources.list.d/chonos.list
+sudo apt update
+sudo apt install linux-headers-`uname -r` chonos-serial-port-emulator
 ```
 
 After the installation, by default, it will be instatiated on /dev many pairs of devices:
