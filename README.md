@@ -23,15 +23,10 @@ And so on. Writing on one device will make its content to be read on the other p
 ## Example
 In a terminal window, execute the command below to put the emulated port waiting for incoming data
 
-```console
-user@machine:~$ sudo javino listen /dev/ttyVBComm0
-HelloChonBot!
-```
-Open another terminal window and run the below command. On the first terminal Window. It should appear the 'Hello Chon!' message.
+Open another terminal window and run the below command. On the first terminal Window. It should appear the 'HelloWorld' message.
 
-```console
-user@machine:~$ sudo javino send /dev/ttyVB0 "HelloChonBot!"
-```
+![Screenshot_20231007_200400](https://github.com/chon-group/dpkg-virtualport-driver/assets/32855001/6624c899-f72e-4a91-a4d4-08f2dc3455c0)
+
 
 ## Copyright
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />ChonIDE is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>. The licensor cannot revoke these freedoms as long as you follow the license terms:
