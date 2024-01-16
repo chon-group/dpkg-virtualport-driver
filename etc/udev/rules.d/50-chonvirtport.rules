@@ -1,0 +1,2 @@
+KERNEL=="ttyExogenous[0-9]*",MODE="0666"
+KERNEL=="ttyEmulatedPort[0-9]*",MODE="0666"
