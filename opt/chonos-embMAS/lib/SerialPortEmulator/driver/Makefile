@@ -1,24 +1,13 @@
-
 KDIR ?= /lib/modules/`uname -r`/build
+MODULE_NAME = virtualbot
 
-MODULES_DEP = /lib/modules/$(shell uname -r)/modules.dep
+obj-m := $(MODULE_NAME).o
 
-# VirtualBot Driver name
-VIRTUALBOT_NAME="virtualbot"
+$(MODULE_NAME)-y := src/virtualbot_main.o
 
-# VirtualBot device name
-VIRTUALBOT_DEVICE=/dev/virtualbot
+ccflags-y := -I$(src)/include -DDEBUG
 
-# Real Arduino device
-# VIRTUALBOT_DEVICE=/dev/ttyACM0
-
-.PHONY: all clean setup_dev_environment modules_install set_debug install modules_install tests
-
-# setup-environment: configures environment for module development
-# For Debian systems, start by using 'apt install make binutils'
-# 1) It downloads the current system kernel headers 
-setup_dev_environment:
-	apt install linux-headers-`uname -r` python3-serial make gcc binutils
+.PHONY: all clean install uninstall
 
 all: 
 	$(MAKE) -C $(KDIR) M=$$PWD modules
@@ -26,41 +15,11 @@ all:
 clean:
 	$(MAKE) -C $(KDIR) M=$$PWD clean
 
-modules_install:
-	$(MAKE) -C $(KDIR) \
-		M=$$PWD \
-		modules_install 
+install:
+	$(MAKE) -C $(KDIR) M=$$PWD modules_install
 	depmod -A
 
-set_debug:
-	dmesg -C
-	sysctl -w kernel.printk=7
-	sysctl kernel.printk
-	
-check_device_logs:
-	dmesg
-
-install:
-	modprobe virtualbot
-	chmod a+rw /dev/ttyEmulatedPort0
-	chmod a+rw /dev/ttyExogenous0
-
 uninstall:
-	rm -f /dev/virtualbot
-	modprobe -r virtualbot
-#	sudo rm -f /lib/modules/`uname -r`/extra/virtualbot.ko
+	rm -f /lib/modules/$(shell uname -r)/kernel/drivers/$(MODULE_NAME)/$(MODULE_NAME).ko
+	modprobe -r $(MODULE_NAME)
 	depmod
-
-tests:
-	dmesg -C
-	./tests/tests_emulatedport_driver.py
-
-test01:
-	python3 ./javython.py send $(VIRTUALBOT_DEVICE) fffe0bgetPercepts
-
-test02:
-	python3 ./javython.py request $(VIRTUALBOT_DEVICE) fffe0bgetPercepts
-# Javino header: fffeXY , where XY is the message length in hex
-# TODO: read tem que retornar ...
-# fffe49status(stopped);obstLeft(60);obstFront(49);obstRight(28);lightSensor(yes)
-
