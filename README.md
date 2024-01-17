@@ -7,7 +7,7 @@ It is a serial port simulator for communication between Multi-agent Systems and 
 ```console
 echo "deb [trusted=yes] http://packages.chon.group/ chonos main" | sudo tee /etc/apt/sources.list.d/chonos.list
 sudo apt update
-sudo apt install linux-headers-`uname -r` chonos-serial-port-emulator
+sudo apt install chonos-serial-port-emulator
 ```
 
 After the installation, by default, it will be instatiated on /dev many pairs of devices:
@@ -23,10 +23,9 @@ And so on. Writing on one device will make its content to be read on the other p
 ## Example
 In a terminal window, execute the command below to put the emulated port waiting for incoming data
 
-Open another terminal window and run the below command. On the first terminal Window. It should appear the 'HelloWorld' message.
+Open another terminal window and run the below command. On the first terminal Window. It should appear the message.
 
-![Screenshot_20231007_200400](https://github.com/chon-group/dpkg-virtualport-driver/assets/32855001/6624c899-f72e-4a91-a4d4-08f2dc3455c0)
-
+![Screenshot_20240117_201825](https://github.com/chon-group/dpkg-virtualport-driver/assets/32855001/3aefe904-f3cd-49a9-a6e8-91eeb423b245)
 
 ## Copyright
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />ChonIDE is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>. The licensor cannot revoke these freedoms as long as you follow the license terms:
