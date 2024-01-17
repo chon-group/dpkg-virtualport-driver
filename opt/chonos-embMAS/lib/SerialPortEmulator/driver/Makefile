@@ -18,7 +18,7 @@ VIRTUALBOT_DEVICE=/dev/virtualbot
 # For Debian systems, start by using 'apt install make binutils'
 # 1) It downloads the current system kernel headers 
 setup_dev_environment:
-	sudo apt install linux-headers-`uname -r` python3-serial make gcc binutils
+	apt install linux-headers-`uname -r` python3-serial make gcc binutils
 
 all: 
 	$(MAKE) -C $(KDIR) M=$$PWD modules
@@ -27,33 +27,33 @@ clean:
 	$(MAKE) -C $(KDIR) M=$$PWD clean
 
 modules_install:
-	sudo $(MAKE) -C $(KDIR) \
+	$(MAKE) -C $(KDIR) \
 		M=$$PWD \
 		modules_install 
-	sudo depmod -A
+	depmod -A
 
 set_debug:
-	sudo dmesg -C
-	sudo sysctl -w kernel.printk=7
-	sudo sysctl kernel.printk
+	dmesg -C
+	sysctl -w kernel.printk=7
+	sysctl kernel.printk
 	
 check_device_logs:
-	sudo dmesg
+	dmesg
 
 install:
-	sudo modprobe virtualbot
-	sudo chmod a+rw /dev/ttyEmulatedPort0
-	sudo chmod a+rw /dev/ttyExogenous0
+	modprobe virtualbot
+	chmod a+rw /dev/ttyEmulatedPort0
+	chmod a+rw /dev/ttyExogenous0
 
 uninstall:
-	sudo rm -f /dev/virtualbot
-	sudo modprobe -r virtualbot
+	rm -f /dev/virtualbot
+	modprobe -r virtualbot
 #	sudo rm -f /lib/modules/`uname -r`/extra/virtualbot.ko
-	sudo depmod
+	depmod
 
 tests:
-	sudo dmesg -C
-	sudo ./tests/tests_emulatedport_driver.py
+	dmesg -C
+	./tests/tests_emulatedport_driver.py
 
 test01:
 	python3 ./javython.py send $(VIRTUALBOT_DEVICE) fffe0bgetPercepts
