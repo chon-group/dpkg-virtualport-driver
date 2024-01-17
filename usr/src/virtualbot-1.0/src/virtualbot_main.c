@@ -46,25 +46,15 @@ MODULE_LICENSE("GPL");
 #define DELAY_TIME		(HZ * 2)	/* 2 seconds per character */
 #define TINY_DATA_CHARACTER	't'
 
-struct MAS_signal {
-
-	char data[ VIRTUALBOT_MAX_SIGNAL_LEN + 2 ];
-
-    struct list_head MAS_signals_list;
-
-};
-
-//static int MAS_signals_count = 0;
-
 
 struct virtualbot_serial {
 	struct tty_struct	*tty;		/* pointer to the tty for this device */
-	int			open_count;	/* number of times this port has been opened */
-	struct mutex	mutex;		/* locks this structure */
 
-	struct timer_list	timer;
+	unsigned long index;
 
-	int created; 
+	int	open_count;	/* number of times this port has been opened */
+
+	struct timer_list timer;
 
 	/* for tiocmget and tiocmset functions */
 	int			msr;		/* MSR shadow */
@@ -78,8 +68,8 @@ struct virtualbot_serial {
 	struct async_icount	icount;
 
 	/* Circular buffer to discard the return chars on writes */
-	char cbuffer[ IGNORE_CHAR_CBUFFER_SIZE ];
-	int head, tail;
+	struct circ_buf recv_buffer;
+	
 };
 
 
@@ -90,9 +80,9 @@ struct vb_comm_serial {
 
 	struct tty_struct	*tty;		/* pointer to the tty for this device */
 	int			open_count;	/* number of times this port has been opened */
-	struct mutex	mutex;		/* locks this structure */
 
-	struct timer_list	timer;
+	/* Used to simulate serial port data rate */
+	struct timer_list timer;
 
 	int created; 
 
@@ -107,11 +97,6 @@ struct vb_comm_serial {
 	
 	struct async_icount	icount;	
 
-
-	// The 'ack' char buffer 
-	char cbuffer[ IGNORE_CHAR_CBUFFER_SIZE ];
-	int head, tail;	
-
 };
 
 
@@ -121,9 +106,9 @@ struct vb_comm_serial {
 static struct mutex virtualbot_global_port_lock[ VIRTUALBOT_MAX_TTY_MINORS ];
 
 /** 
- * VirtualBot MAS agent structres
- * */
-static struct list_head *MAS_signals_list_head[ VIRTUALBOT_MAX_TTY_MINORS ];
+ * This mutex locks the vb_comm_serial structure
+*/
+static struct mutex virtualbot_lock[ VIRTUALBOT_MAX_TTY_MINORS ];
 
 static struct virtualbot_serial *virtualbot_table[ VIRTUALBOT_MAX_TTY_MINORS ];	/* initially all NULL */
 
@@ -132,61 +117,57 @@ static struct tty_port virtualbot_tty_port[ 2 * VIRTUALBOT_MAX_TTY_MINORS ];
 /** 
  * The VirtualBot Commander structures
 */
+static struct mutex vb_comm_lock[ VIRTUALBOT_MAX_TTY_MINORS ];
+
 static struct vb_comm_serial *vb_comm_table[ VIRTUALBOT_MAX_TTY_MINORS ];	/* initially all NULL */
 
 static struct tty_port vb_comm_tty_port[ VIRTUALBOT_MAX_TTY_MINORS ];
 
-#ifdef PROBABLY_NOT_GOING_TO_USE_ANYMORE
-static void tiny_timer(struct timer_list *t)
+
+static void virtualbot_timer(struct timer_list *t)
 {
-	struct virtualbot_serial *tiny = from_timer(tiny, t, timer);
+	unsigned long virtualbot_index;
 
-	struct tty_struct *tty;
-	struct tty_port *port;
+	struct virtualbot_serial *virtualbot_dev;
 
-	int i;
+	struct tty_struct *virtualbot_tty;
 
-	char data[1] = {TINY_DATA_CHARACTER};
+	struct vb_comm_serial *vb_comm_dev;
 
-	int data_size = 1;
+	virtualbot_dev = container_of(t, struct virtualbot_serial, timer);	
 
-	if (!tiny){
-		pr_warn("virtualbot: tty not set");
-		return;
+	virtualbot_tty = virtualbot_dev->tty;	
+
+	if (virtualbot_tty != NULL){
+		// virtualbot is allocated
+		virtualbot_index = virtualbot_dev->index;
+
+		pr_debug("virtualbot: timer index = %lu", 
+			virtualbot_index);
+
+		vb_comm_dev = vb_comm_table[ virtualbot_index ];
+
+		if (vb_comm_dev != NULL){
+			// vb_comm_dev is ready	
+			
+		} else {
+			pr_warn( "virtualbot: vb_comm device for tty %lu not set!", 
+				virtualbot_index );
+		}
+
+	} else {
+		pr_err("virtualbot: virtualbot_tty not set!");
 	}
 
-	tty = tiny->tty;
-	port = tty->port;
+	/* resubmit the timer again */		
+	timer_setup(t, virtualbot_timer, 0);
 
-	if (!port){
-		pr_warn("virtualbot: port not set on timer setup");
-		return;
-	}
+	t->expires = jiffies + DELAY_TIME;
 
-	/* send the data to the tty layer for users to read.  This doesn't
-	 * actually push the data through unless tty->low_latency is set */
-	for (i = 0; i < data_size; i++) {
+	add_timer(t);
 
-		pr_debug("virtualbot: flip buffer write");
-
-		if ( !tty_buffer_request_room(port, 1) )
-
-			tty_flip_buffer_push(port);
-
-		tty_insert_flip_char(port, data[i], TTY_NORMAL);
-	}
-
-	tty_flip_buffer_push(port);
-
-	/* resubmit the timer again */
-	//tiny->timer.expires = jiffies + DELAY_TIME;
-	//add_timer(&tiny->timer);
-
-	// timer_setup(&tiny->timer, tiny_timer, 0);
-
-	mod_timer(&tiny->timer, jiffies + msecs_to_jiffies(2000));
+	//mod_timer(&tiny->timer, jiffies + msecs_to_jiffies(2000));
 }
-#endif
 
 static int virtualbot_open(struct tty_struct *tty, struct file *file)
 {
@@ -202,56 +183,45 @@ static int virtualbot_open(struct tty_struct *tty, struct file *file)
 
 	pr_debug("virtualbot: open port %d", index);
 
-	mutex_lock( &( virtualbot_global_port_lock[ index ] ) );
+	mutex_lock( &virtualbot_lock[ index ] );
 
 	if (virtualbot == NULL) {
 		/* first time accessing this device, let's create it */
 		virtualbot = kmalloc(sizeof(*virtualbot), GFP_KERNEL);
+
 		if (!virtualbot)
 			return -ENOMEM;
 
-		//mutex_init(&virtualbot_global_port_lock[ index ]);
+		virtualbot->index = index;
+			
 		virtualbot->open_count = 0;
 
 		virtualbot_table[index] = virtualbot;
 
-		virtualbot_table[index]->head = 0;
-		virtualbot_table[index]->tail = 0;
+		/**
+		 *  Allocating receive buffer , 4 KiB default size
+		 * */
+		virtualbot_table[index]->recv_buffer.head = 0;
+		virtualbot_table[index]->recv_buffer.tail = 0;
 
-		/* 
-			MAS structure initialization. 
-			It will be initialized the first time the driver is openned
-			and stay alive on the driver until it is unregistered with 
-			modprobe -r
-			
-			For this reason, there is a hard limit on the number of signals stored
-			to avoid infinite memory allocation inside the kernel
-		*/
+		virtualbot_table[index]->recv_buffer.buf = kmalloc( 
+			sizeof(char) * 4096,
+			GFP_KERNEL );
 
-#ifdef NOT_YET	
-		if ( MAS_signals_list_head[ tty->index ] == NULL ){
-
-			MAS_signals_list_head[ tty->index ] = kmalloc( sizeof( struct list_head ), GFP_KERNEL );
-
-			INIT_LIST_HEAD( MAS_signals_list_head[ tty->index ] );
-		}
-#endif
-
+		// pointer to the tty struct
+		virtualbot_table[index]->tty = tty;
 
 		/* create our timer and submit it */
-		//timer_setup(&virtualbot->timer, virtualbot_timer, 0);
+		timer_setup(&virtualbot->timer, virtualbot_timer, 0);		
 
-		//mod_timer(&virtualbot->timer, jiffies + msecs_to_jiffies(2000));		
+		virtualbot->timer.expires = jiffies + DELAY_TIME;
 
-		//virtualbot->timer.expires = jiffies + DELAY_TIME;
-
-		//add_timer(&virtualbot->timer);
+		add_timer(&virtualbot->timer);
 
 	} else {
-		// Already set
+		// Already set		
+	}
 
-		//mutex_lock( &virtualbot_global_port_lock[ index ] );
-	}	
 
 	/* save our structure within the tty structure */
 	tty->driver_data = virtualbot;
@@ -263,7 +233,7 @@ static int virtualbot_open(struct tty_struct *tty, struct file *file)
 		/* do any hardware initialization needed here */
 	}
 
-	mutex_unlock(&virtualbot_global_port_lock[ index ]);
+	mutex_unlock( &virtualbot_lock[ index ] );	
 
 	pr_debug("virtualbot: open port %d finished", index);
 
@@ -276,7 +246,7 @@ static void do_close(struct virtualbot_serial *virtualbot)
 
 	// pr_debug("virtualbot: do_close port %d", index);
 
-	mutex_lock(&virtualbot_global_port_lock[ index ]);
+	mutex_lock( &virtualbot_lock[ index ] );
 
 	if (!virtualbot->open_count) {
 		/* port was never opened */
@@ -288,8 +258,7 @@ static void do_close(struct virtualbot_serial *virtualbot)
 		/* The port is being closed by the last user. */
 		/* Do any hardware specific stuff here */
 
-		/* shut down our timer */
-		// del_timer(&virtualbot->timer);		
+
 	}
 
 	// Force push the vb_comm buffer
@@ -297,14 +266,14 @@ static void do_close(struct virtualbot_serial *virtualbot)
 
 exit:
 	// pr_debug("virtualbot: do_close port %d finished", index);
-	mutex_unlock(&virtualbot_global_port_lock[ index ]);
+	mutex_unlock( &( virtualbot_lock[ index ] ) );
 }
 
 static void virtualbot_close(struct tty_struct *tty, struct file *file)
 {
 	struct virtualbot_serial *virtualbot = tty->driver_data;
 
-	pr_debug("virtualbot: close port %d", tty->index);
+	pr_debug("virtualbot: port %d", tty->index);
 
 	if (virtualbot){
 		pr_debug("virtualbot: do_close port %d", tty->index);
@@ -316,7 +285,8 @@ static void virtualbot_close(struct tty_struct *tty, struct file *file)
 }
 
 static int virtualbot_write(struct tty_struct *tty,
-		      const unsigned char *buffer, int count)
+	const unsigned char *buffer,
+	int count)
 {	
 	int i, index;
 	int retval;
@@ -337,107 +307,30 @@ static int virtualbot_write(struct tty_struct *tty,
 	if (!virtualbot)
 		return -ENODEV;
 
-	mutex_lock(&virtualbot_global_port_lock[ index ]);
+	mutex_lock(&vb_comm_lock[ index ]);
 	
 	vb_comm = vb_comm_table[ index ];
-	if (!vb_comm){
-		pr_err("virtualbot: vb_comm not set!");
+	if (vb_comm == NULL){
+		pr_err("virtualbot: %s vb_comm not set!", __func__);
 		goto exit;
 	}
 
 	vb_comm_tty = vb_comm->tty;
-	if (!vb_comm_tty){
-		pr_err("virtualbot: vb_comm tty not set!");
+	if (vb_comm_tty == NULL ){
+		pr_err("virtualbot: %s vb_comm tty not set!", __func__);
 		goto exit;
 	}
 
 	vb_comm_port = vb_comm_tty->port;
-	if (!vb_comm_port){
-		pr_err("virtualbot: vb_comm port not set!");
+	if (vb_comm_port == NULL){
+		pr_err("virtualbot: %s vb_comm port not set!", __func__);
 		goto exit;
 	}
 
-	if (!virtualbot->open_count)
+	if (!virtualbot->open_count){
 		/* port was not opened */
 		goto exit;
-
-	/* 
-		Discarding the carriage return and new line the tty core is sending
-		
-		No idea how to avoid this yet :(
-	*/
-	if ( count == 2 && buffer[0] == '\r' && buffer[1]=='\n' ){
-		retval = 2;
-
-		pr_debug("virtualbot: %s - sending end of line (\\r\\n)", __func__);
-
-		tty_insert_flip_char( vb_comm_port, 
-			'\r',
-			TTY_NORMAL);
-
-		tty_insert_flip_char( vb_comm_port, 
-			'\n',
-			TTY_NORMAL);
-
-		tty_flip_buffer_push(vb_comm_port);
-
-		goto exit;
 	}
-
-
-	if ( count == 1 && buffer[0] == '\n' ){
-		retval = 1 ;
-
-		pr_debug("virtualbot: %s - sending end of line (\\n)", __func__);
-
-		tty_insert_flip_char( vb_comm_port, 
-			'\n',
-			TTY_NORMAL);
-
-		tty_flip_buffer_push(vb_comm_port);
-
-		goto exit;
-	}
-
-	/* fake sending the data out a hardware port by
-	 * writing it to the kernel debug log.
-	 */
-
-	/* 
-		TODO: race condition here!
-		Hard limit on the number of stored signals on VIRTUALBOT_TOTAL_SIGNALS
-	*/
-#ifdef NOT_YET
-	if (MAS_signals_count < VIRTUALBOT_TOTAL_SIGNALS ){
-
-		buffer_len = ( count < VIRTUALBOT_MAX_SIGNAL_LEN) ? 
-			count : VIRTUALBOT_MAX_SIGNAL_LEN;
-
-		if ( count > VIRTUALBOT_MAX_SIGNAL_LEN ){
-			pr_warn("virtualbot: signal length (%d) is greater than maximum (%d) - discarding", 
-				count,
-				VIRTUALBOT_MAX_SIGNAL_LEN );
-
-			for ( i = 0; i < buffer_len; i++ ){
-				pr_warn("%02x ", buffer[i]);
-			}
-		}
-
-		new_MAS_signal = kmalloc(sizeof(struct MAS_signal), GFP_KERNEL);
-
-		strcpy( new_MAS_signal->data, 
-			buffer
-			);
-
-		list_add( &new_MAS_signal->MAS_signals_list , 
-			MAS_signals_list_head[ index ] ) ;
-
-		pr_info("\n");
-	} else {
-		// Maximum number of signals stored achieved - warn kernel then exit
-		pr_warn("virtualbot: maximum number of stored signals achieved");
-	}
-#endif
 
 	pr_debug("virtualbot: %s - writing %d length of data", __func__, count);	
 
@@ -455,7 +348,7 @@ static int virtualbot_write(struct tty_struct *tty,
 	retval = count;
 
 exit:
-	mutex_unlock(&virtualbot_global_port_lock[ index ]);
+	mutex_unlock( &vb_comm_lock[ index ] );
 	return retval;
 }
 
@@ -474,7 +367,7 @@ static unsigned int virtualbot_write_room(struct tty_struct *tty)
 	if (!virtualbot)
 		return -ENODEV;	
 
-	mutex_lock(&virtualbot_global_port_lock[ index ]);
+	mutex_lock( &virtualbot_lock[ index ] );
 
 	if (!virtualbot->open_count) {
 		/* port was not opened */
@@ -487,7 +380,7 @@ static unsigned int virtualbot_write_room(struct tty_struct *tty)
 	room = tty_buffer_space_avail( tty->port );
 
 exit:
-	mutex_unlock(&virtualbot_global_port_lock[ index ]);
+	mutex_unlock(&virtualbot_lock[ index ]);
 
 	pr_debug("virtualbot: room = %u", room );
 
@@ -496,8 +389,19 @@ exit:
 
 #define RELEVANT_IFLAG(iflag) ((iflag) & (IGNBRK|BRKINT|IGNPAR|PARMRK|INPCK))
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 14, 0)) 
+//static int virtualbot_write_room(struct tty_struct *tty)
+#else
+//static unsigned int virtualbot_write_room(struct tty_struct *tty)
+#endif
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,0, 0)) 
+static void virtualbot_set_termios(struct tty_struct *tty, 
+	struct ktermios *old_termios)
+#else
 static void virtualbot_set_termios(struct tty_struct *tty, 
 	const struct ktermios *old_termios)
+#endif	
 {
 	unsigned int cflag;
 
@@ -794,7 +698,7 @@ static int vb_comm_open(struct tty_struct *tty, struct file *file)
 
 	pr_debug("vb_comm: open port %d", index );
 
-	mutex_lock(&virtualbot_global_port_lock[ index ]);
+	mutex_lock(&vb_comm_lock[ index ]);
 
 	if (vb_comm == NULL) {
 		/* first time accessing this device, let's create it */
@@ -807,10 +711,6 @@ static int vb_comm_open(struct tty_struct *tty, struct file *file)
 		vb_comm->open_count = 0;
 
 		vb_comm_table[index] = vb_comm;
-
-		vb_comm_table[index]->head = 0;
-		vb_comm_table[index]->tail = 0;
-
 
 	} else {
 		// Port is already open
@@ -828,7 +728,7 @@ static int vb_comm_open(struct tty_struct *tty, struct file *file)
 		/* do any hardware initialization needed here */
 	}
 
-	mutex_unlock(&virtualbot_global_port_lock[ index ]);
+	mutex_unlock(&vb_comm_lock[ index ]);
 
 	pr_debug("vb-comm: open port %d finished", index);
 
@@ -840,7 +740,7 @@ static void vb_comm_do_close(struct vb_comm_serial *vb_comm)
 {
 	int index = vb_comm->tty->index;
 
-	mutex_lock(&virtualbot_global_port_lock[ index ]);
+	mutex_lock( &vb_comm_lock[ index ] );
 
 	if (!vb_comm->open_count) {
 		/* port was never opened */
@@ -857,7 +757,7 @@ static void vb_comm_do_close(struct vb_comm_serial *vb_comm)
 	}
 exit:
 	//pr_debug("vb_comm: do_close finished");
-	mutex_unlock(&virtualbot_global_port_lock[ index ]);
+	mutex_unlock( &vb_comm_lock[ index ] );
 }
 
 static void vb_comm_close(struct tty_struct *tty, struct file *file)
@@ -922,73 +822,34 @@ static int vb_comm_write(struct tty_struct *tty,
 
 	index = tty->index;
 	retval = -EINVAL;
-	vb_comm = tty->driver_data;	
+	vb_comm = tty->driver_data;
 
 	if (!vb_comm){
 		return -ENODEV;
 	}
-
-	mutex_lock( &virtualbot_global_port_lock[ index ] );
 
 	if (!vb_comm->open_count){
 		/* port was not opened */
 		goto exit;
 	}	
 
+	mutex_lock( &virtualbot_lock[ index ] );
+
 	virtualbot = virtualbot_table[ index ];
-	if (!virtualbot){
+	if (virtualbot == NULL){
 		pr_err("vb_comm: virtualbot table not set!");
 		goto exit;
 	}
 
 	virtualbot_tty = virtualbot->tty;
-	if (!virtualbot_tty){
+	if (virtualbot_tty == NULL){
 		pr_err("vb_comm: virtualbot tty not set!");
 		goto exit;
 	}
 
 	virtualbot_port = virtualbot_tty->port;
-	if (!virtualbot_port){
+	if (virtualbot_port == NULL){
 		pr_err("vb_comm: virtualbot port not set!");
-		goto exit;
-	}
-	
-	/* 
-		Discarding the carriage return and new line the tty core is sending
-		
-		No idea how to avoid this yet :(
-	*/
-	if ( count == 2 && buffer[0] == '\r' && buffer[1]=='\n' ){
-		retval = 2;
-
-		pr_debug("vb-comm: %s - sending \\CR \\LF (\\r\\n)", __func__);
-
-		tty_insert_flip_char( virtualbot_port, 
-			'\r',
-			TTY_NORMAL);
-
-		tty_insert_flip_char( virtualbot_port, 
-			'\n',
-			TTY_NORMAL);	
-
-		tty_flip_buffer_push( virtualbot_port );
-
-		goto exit;
-	}
-
-
-	if (count == 1 && buffer[0] == '\n'){
-
-		retval = 1 ;
-
-		pr_debug("vb-comm: %s - sending end of line (\\n)", __func__);
-
-		tty_insert_flip_char( virtualbot_port,
-			'\n',
-			TTY_NORMAL);	
-
-		tty_flip_buffer_push( virtualbot_port );
-
 		goto exit;
 	}
 
@@ -1007,7 +868,8 @@ static int vb_comm_write(struct tty_struct *tty,
 	retval = count;
 
 exit:
-	mutex_unlock(&virtualbot_global_port_lock[ index ]);
+	mutex_unlock( &virtualbot_lock[ index ] );
+
 	return retval;
 }
 
@@ -1089,9 +951,9 @@ static int __init virtualbot_init(void)
 			NULL);
 		pr_debug("virtualbot: port %i linked", i);
 
-		// Starting the MAS signal list with a NULL pointer
-		MAS_signals_list_head[ i ] = NULL;
 		virtualbot_table[ i ] = NULL;
+		
+		mutex_init( &virtualbot_lock[ i ] );
 	}
 
 	/* register the tty driver */
@@ -1105,7 +967,7 @@ static int __init virtualbot_init(void)
 		return retval;
 	}
 	
-	pr_info("virtualbot: driver initialized (" DRIVER_DESC " " DRIVER_VERSION  ")" );
+	//pr_info("virtualbot: driver initialized (" DRIVER_DESC " " DRIVER_VERSION  ")" );
 
 	/*
 	 * 
@@ -1157,6 +1019,8 @@ static int __init virtualbot_init(void)
 
 		// Port state is initially NULL
 		vb_comm_table[ i ] = NULL;
+		
+		mutex_init( &vb_comm_lock[ i ] );
 	}
 
 
@@ -1176,7 +1040,7 @@ static int __init virtualbot_init(void)
 		mutex_init( &virtualbot_global_port_lock[ i ] );
 	}
 
-	pr_info("vb-comm: driver initialized (" DRIVER_DESC " " DRIVER_VERSION  ")" );
+	pr_info("Serial Port Emulator initialized (" DRIVER_DESC " " DRIVER_VERSION  ")" );
 
 	return retval;
 }
@@ -1187,7 +1051,7 @@ static void __exit virtualbot_exit(void)
 	struct vb_comm_serial *vb_comm;
 	int i;
 
-	struct list_head *pos, *n;
+	// struct list_head *pos, *n;
 
 	for (i = 0; i < VIRTUALBOT_MAX_TTY_MINORS; ++i) {
 		
@@ -1220,26 +1084,17 @@ static void __exit virtualbot_exit(void)
 
 			/* shut down our timer and free the memory */
 			del_timer(&virtualbot->timer);
+
+			/* deallocate receive buffer */
+			kfree( virtualbot->recv_buffer.buf );
+			
+			/* destroy structure mutex */
+			mutex_destroy( &virtualbot_lock[ i ] );
+			
 			kfree(virtualbot);
 			virtualbot_table[i] = NULL;
 		}
 
-		if ( MAS_signals_list_head[ i ] != NULL ) {
-
-			// Delete MAS signals list 
-			list_for_each_safe(pos, n, MAS_signals_list_head[ i ] ){
-
-				struct MAS_signal *signal = NULL;
-
-				signal = list_entry(pos, struct MAS_signal, MAS_signals_list);
-						
-				pr_debug("virtualbot: delete %s", signal->data );
-
-				list_del( pos );
-			}
-
-			kfree( MAS_signals_list_head[ i ] );
-		}
 	}
 
 	/**
@@ -1274,6 +1129,8 @@ static void __exit virtualbot_exit(void)
 			/* close thvirtualbote port */
 			while (vb_comm->open_count)
 				vb_comm_do_close(vb_comm);
+				
+			mutex_destroy( &vb_comm_lock[ i ] );
 
 			/* shut down our timer and free the memory */
 			//del_timer(&virtualbot->timer);

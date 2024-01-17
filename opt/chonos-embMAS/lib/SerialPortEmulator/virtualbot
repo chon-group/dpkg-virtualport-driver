@@ -1,21 +1,21 @@
 #! /bin/sh
-DIR="/opt/chonos-embMAS/lib/SerialPortEmulator/driver/"
+MODULE_NAME="virtualbot"
+MODULE_FILE="/etc/modules"
 
 if [ "$1" = "start" ]; then
-	modprobe virtualbot
+	modprobe $MODULE_NAME
 elif [ "$1" = "stop" ]; then
-	modprobe -r virtualbot
+	modprobe -r $MODULE_NAME
 elif [ "$1" = "install" ]; then
-	cd $DIR
-	make clean all
-	make modules_install
-	make install
-	echo virtualbot >> /etc/modules
+	dkms add -m $MODULE_NAME -v 1.0
+	dkms build -m $MODULE_NAME -v 1.0
+	dkms install -m $MODULE_NAME -v 1.0
+	modprobe $MODULE_NAME
+	echo $MODULE_NAME >> $MODULE_FILE
 elif [ "$1" = "uninstall" ]; then
-	cd $DIR
-	modprobe -r virtualbot
-	make uninstall
-	make clean
-	cat /etc/modules | grep -v virtualbot > /tmp/modules
-	mv /tmp/modules /etc/modules
+	modprobe -r $MODULE_NAME
+	dkms uninstall -m $MODULE_NAME -v 1.0
+	dkms remove -m $MODULE_NAME -v 1.0
+	cat $MODULE_FILE | grep -v $MODULE_NAME > /tmp/modules
+	mv /tmp/modules $MODULE_FILE
 fi

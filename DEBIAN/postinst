@@ -1,2 +1,10 @@
 #!/bin/bash
-/opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot install
+MODULE_NAME="virtualbot"
+MODULE_FILE="/etc/modules"
+
+if grep -q "^$MODULE_NAME$" "$MODULE_FILE"; then
+    /opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot uninstall
+    /opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot install
+else
+    /opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot install
+fi

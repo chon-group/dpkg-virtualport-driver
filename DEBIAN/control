@@ -1,10 +1,10 @@
 Package: chonos-serial-port-emulator
-Version: 1.1.0
+Version: 1.2.0
 Priority:
 Architecture: all
 Essential:
 Depends: javino (>= 1.6.4)
-Pre-depends: gcc, binutils, make
+Pre-depends: dkms
 Suggests:
 Installed-Size:
 Maintainer: chon@grupo.cefet-rj.br
