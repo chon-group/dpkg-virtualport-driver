@@ -7,6 +7,7 @@ It is a serial port simulator for communication between Multi-agent Systems and 
 ```console
 echo "deb [trusted=yes] http://packages.chon.group/ chonos main" | sudo tee /etc/apt/sources.list.d/chonos.list
 sudo apt update
+sudo apt install linux-headers-`uname -r`
 sudo apt install chonos-serial-port-emulator
 ```
 
