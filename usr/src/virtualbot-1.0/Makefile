@@ -7,7 +7,7 @@ $(MODULE_NAME)-y := src/virtualbot_main.o
 
 ccflags-y := -I$(src)/include
 
-.PHONY: all all-dbg clean install uninstall modules_install
+.PHONY: all all-dbg clean install install-dev uninstall modules_install tests
 
 all: 
 	$(MAKE) -C $(KDIR) M=$$PWD modules
@@ -27,6 +27,11 @@ modules_install:
 install:
 	$(MAKE) -C $(KDIR) M=$$PWD modules_install
 	depmod -A
+	
+install-dev:
+	sudo modprobe virtualbot
+	sudo chmod 666 /dev/ttyEmulatedPort0
+	sudo chmod 666 /dev/ttyExogenous0
 
 uninstall:
 	rm -f /lib/modules/$(shell uname -r)/kernel/drivers/$(MODULE_NAME)/$(MODULE_NAME).ko
