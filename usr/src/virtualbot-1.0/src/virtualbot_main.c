@@ -284,11 +284,36 @@ static void virtualbot_close(struct tty_struct *tty, struct file *file)
 	pr_debug("virtualbot: close port %d finished", tty->index);
 }
 
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 8, 0))
+ 
+static ssize_t virtualbot_write(struct tty_struct *tty,
+	const u8 *buffer,
+	size_t count)
+	
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) 
+
+static ssize_t virtualbot_write(struct tty_struct *tty,
+	const unsigned char *buffer,
+	size_t count)
+	
+#else
+
 static int virtualbot_write(struct tty_struct *tty,
 	const unsigned char *buffer,
 	int count)
+	
+#endif
 {	
-	int i, index;
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) 
+	size_t i;
+#else
+	int i;
+#endif
+
+	int index;
+	
 	int retval;
 
 	struct vb_comm_serial *vb_comm;
@@ -807,11 +832,37 @@ exit:
 
 }
 
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 8, 0))
+ 
+static ssize_t vb_comm_write(struct tty_struct *tty,
+	const u8 *buffer,
+	size_t count)
+	
+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) 
+
+static ssize_t vb_comm_write(struct tty_struct *tty,
+	const unsigned char *buffer,
+	size_t count)
+	
+#else
+
 static int vb_comm_write(struct tty_struct *tty,
 	const unsigned char *buffer, 
 	int count)
+	
+#endif
 {	
-	int i, index, retval;
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) 
+	size_t i;
+#else
+	int i;
+#endif
+
+	int index;
+	
+	int retval;
 
 	struct vb_comm_serial *vb_comm;
 	struct virtualbot_serial *virtualbot;
