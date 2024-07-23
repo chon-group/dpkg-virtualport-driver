@@ -357,7 +357,11 @@ static int virtualbot_write(struct tty_struct *tty,
 		goto exit;
 	}
 
-	pr_debug("virtualbot: %s - writing %d length of data", __func__, count);	
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) 
+	pr_debug("virtualbot: %s - writing %lu length of data", __func__, (long unsigned)count);
+#else
+	pr_debug("virtualbot: %s - writing %d length of data", __func__, count);
+#endif
 
 	for ( i = 0; i < count; i++ ){
 		pr_debug("%02x ", buffer[i]);
@@ -904,7 +908,11 @@ static int vb_comm_write(struct tty_struct *tty,
 		goto exit;
 	}
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 0)) 
+	pr_debug("vb-comm: %s - writing %lu length of data", __func__, (long unsigned)count);	
+#else
 	pr_debug("vb-comm: %s - writing %d length of data", __func__, count);	
+#endif
 
 	for ( i = 0; i < count; i++ ){
 		pr_debug("%02x ", buffer[i]);
