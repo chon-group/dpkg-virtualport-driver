@@ -1,5 +1,5 @@
 Package: chonos-serial-port-emulator
-Version: 1.2.2
+Version: 1.3.0
 Priority:
 Architecture: all
 Essential:
@@ -7,8 +7,8 @@ Depends:
 Pre-depends: dkms
 Suggests:
 Installed-Size:
-Maintainer: chon@grupo.cefet-rj.br
+Maintainer: Nilson Lazarin <chon@grupo.cefet-rj.br>
 Conflicts: 
 Replaces:
 Provides:
-Description: A ChonOS package of the Serial Port Emulator by https://github.com/bptfreitas/SerialPortEmulator
+Description: A ChonOS package of the Serial Port Emulator by https://github.com/chon-group/SerialPortEmulator
