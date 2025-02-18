@@ -2,9 +2,19 @@
 MODULE_NAME="virtualbot"
 MODULE_FILE="/etc/modules"
 
+gcc_version=`egrep -wo 'gcc-[[:digit:]]+' /proc/version`
+if [[ "$gcc_version" == "" ]]; then 
+	echo "Warning: couldn't find the gcc used for kernel compilation! Setting the default gcc meta package"
+	gcc_version="gcc"
+fi
+
+path_to_gcc="`which $gcc_version`"
+export CC="$path_to_gcc"
+$CC --version
+
 if grep -q "^$MODULE_NAME$" "$MODULE_FILE"; then
-    /opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot uninstall
-    /opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot install
+    /opt/group.chon/lib/SerialPortEmulator/virtualbot uninstall
+    /opt/group.chon/lib/SerialPortEmulator/virtualbot install
 else
-    /opt/chonos-embMAS/lib/SerialPortEmulator/virtualbot install
+    /opt/group.chon/lib/SerialPortEmulator/virtualbot install
 fi

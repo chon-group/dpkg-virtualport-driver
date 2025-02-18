@@ -7,15 +7,15 @@ if [ "$1" = "start" ]; then
 elif [ "$1" = "stop" ]; then
 	modprobe -r $MODULE_NAME
 elif [ "$1" = "install" ]; then
-	dkms add -m $MODULE_NAME -v 1.0
-	dkms build -m $MODULE_NAME -v 1.0
-	dkms install -m $MODULE_NAME -v 1.0
+	dkms add -m $MODULE_NAME -v 1.2.3
+	dkms build -m $MODULE_NAME -v 1.2.3
+	dkms install -m $MODULE_NAME -v 1.2.3
 	modprobe $MODULE_NAME
 	echo $MODULE_NAME >> $MODULE_FILE
 elif [ "$1" = "uninstall" ]; then
 	modprobe -r $MODULE_NAME
-	dkms uninstall -m $MODULE_NAME -v 1.0
-	dkms remove -m $MODULE_NAME -v 1.0
+	dkms uninstall -m $MODULE_NAME -v 1.2.3
+	dkms remove -m $MODULE_NAME -v 1.2.3
 	cat $MODULE_FILE | grep -v $MODULE_NAME > /tmp/modules
 	mv /tmp/modules $MODULE_FILE
 fi
