@@ -1,0 +1,33 @@
+#! /bin/sh
+MODULE_VERSION="1.2.4"
+MODULE_NAME="virtualbot"
+MODULE_FILE="/etc/modules"
+
+if [ "$1" = "start" ]; then
+	modprobe $MODULE_NAME
+elif [ "$1" = "stop" ]; then
+	modprobe -r $MODULE_NAME
+elif [ "$1" = "install" ]; then
+	dkms add -m $MODULE_NAME -v $MODULE_VERSION
+	dkms build -m $MODULE_NAME -v $MODULE_VERSION --force
+	dkms install -m $MODULE_NAME -v $MODULE_VERSION --force
+	modprobe $MODULE_NAME
+	echo $MODULE_NAME >> $MODULE_FILE
+elif [ "$1" = "uninstall" ]; then
+	modprobe -r $MODULE_NAME
+	dkms uninstall -m $MODULE_NAME -v $MODULE_VERSION
+	dkms remove -m $MODULE_NAME -v $MODULE_VERSION
+	cat $MODULE_FILE | grep -v $MODULE_NAME > /tmp/modules
+	mv /tmp/modules $MODULE_FILE
+elif [ "$1" = "reinstall" ]; then
+	modprobe -r $MODULE_NAME
+	dkms uninstall -m $MODULE_NAME -v $MODULE_VERSION
+	dkms remove -m $MODULE_NAME -v $MODULE_VERSION
+	cat $MODULE_FILE | grep -v $MODULE_NAME > /tmp/modules
+	mv /tmp/modules $MODULE_FILE
+	dkms add -m $MODULE_NAME -v $MODULE_VERSION
+	dkms build -m $MODULE_NAME -v $MODULE_VERSION --force
+	dkms install -m $MODULE_NAME -v $MODULE_VERSION --force
+	modprobe $MODULE_NAME
+	echo $MODULE_NAME >> $MODULE_FILE
+fi
