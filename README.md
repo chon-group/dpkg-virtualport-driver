@@ -1,5 +1,5 @@
 # Chon Serial Port Emulator
-|![](.imgs/cover.png)|
+|![](https://github.com/user-attachments/assets/91bbdfee-daaf-4d65-807c-1e654c39c95c)|
 |:-:|
 |It is a serial port emulator for communication between Multi-agent Systems and a Exogenous Environment in Simulated World.|
 
