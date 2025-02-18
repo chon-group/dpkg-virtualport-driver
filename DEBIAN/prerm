@@ -1,2 +1,2 @@
 #!/bin/bash
-/opt/group.chon/lib/SerialPortEmulator/virtualbot uninstall
+/opt/group.chon/lib/SerialPortEmulator/virtualPortEmulator uninstall

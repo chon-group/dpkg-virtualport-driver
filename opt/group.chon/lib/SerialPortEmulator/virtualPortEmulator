@@ -1,5 +1,5 @@
 #! /bin/sh
-MODULE_VERSION="1.2.4"
+MODULE_VERSION="1.3.0"
 MODULE_NAME="virtualbot"
 MODULE_FILE="/etc/modules"
 

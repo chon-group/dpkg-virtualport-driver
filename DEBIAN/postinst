@@ -13,8 +13,7 @@ export CC="$path_to_gcc"
 $CC --version
 
 if grep -q "^$MODULE_NAME$" "$MODULE_FILE"; then
-    /opt/group.chon/lib/SerialPortEmulator/virtualPortEmulator uninstall
-    /opt/group.chon/lib/SerialPortEmulator/virtualPortEmulator install
+    /opt/group.chon/lib/SerialPortEmulator/virtualPortEmulator reinstall
 else
     /opt/group.chon/lib/SerialPortEmulator/virtualPortEmulator install
 fi
