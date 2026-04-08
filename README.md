@@ -34,7 +34,7 @@ Open another terminal window and run the below command. On the first terminal Wi
 
 * __Attribution__ — You must give __appropriate credit__ like below:
 
-FREITAS, Bruno Policarpo Toledo; LAZARIN, Nilson Mori; PANTOJA, Carlos Eduardo. Uma Proposta de Emulador de Portas Seriais para Sistemas Multiagentes Embarcados. In: WORKSHOP-SCHOOL ON AGENTS, ENVIRONMENTS, AND APPLICATIONS (WESAAC), 17. , 2023, Pelotas/RS. Anais [...]. Porto Alegre: Sociedade Brasileira de Computação, 2023 . p. 55-66. ISSN 2326-5434. URL: https://sol.sbc.org.br/index.php/wesaac/article/view/33437
+FREITAS, Bruno Policarpo Toledo; LAZARIN, Nilson Mori; PANTOJA, Carlos Eduardo; VITERBO, José. Integrating Simulated Exogenous Environments to Support the Learning Process of the Embedded MAS Approach. In: WORKSHOP ON COMPUTING EDUCATION (WEI), 33. , 2025, Maceió/AL. Anais [...]. Porto Alegre: Sociedade Brasileira de Computação, 2025 . p. 1195-1206. ISSN 2595-6175. DOI: https://doi.org/10.5753/wei.2025.9115.
 
 
 <details>
@@ -42,18 +42,19 @@ FREITAS, Bruno Policarpo Toledo; LAZARIN, Nilson Mori; PANTOJA, Carlos Eduardo. 
 
 
 ```
-@inproceedings{wesaac,
- author = {Bruno Freitas and Nilson Lazarin and Carlos Pantoja},
- title = {Uma Proposta de Emulador de Portas Seriais para Sistemas Multiagentes Embarcados},
- booktitle = {Proceedings of the 17th Workshop-School on Agents, Environments, and Applications},
- location = {Pelotas/RS},
- year = {2023},
+@inproceedings{wei,
+ author = {Bruno Freitas and Nilson Lazarin and Carlos Pantoja and José Viterbo},
+ title = { Integrating Simulated Exogenous Environments to Support the Learning Process of the Embedded MAS Approach},
+ booktitle = {Proceedings of the 33rd Workshop on Computing Education},
+ location = {Maceió/AL},
+ year = {2025},
  keywords = {},
- issn = {2326-5434},
- pages = {55--66},
+ issn = {2595-6175},
+ pages = {1195--1206},
  publisher = {SBC},
  address = {Porto Alegre, RS, Brasil},
- url = {https://sol.sbc.org.br/index.php/wesaac/article/view/33437}
+ doi = {10.5753/wei.2025.9115},
+ url = {https://sol.sbc.org.br/index.php/wei/article/view/36252}
 }
 
 ```
