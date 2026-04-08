@@ -8,7 +8,8 @@ Pre-depends: dkms
 Suggests:
 Installed-Size:
 Maintainer: Nilson Lazarin <chon@grupo.cefet-rj.br>
+Homepage: https://github.com/chon-group/dpkg-virtualport-driver
 Conflicts: 
 Replaces:
 Provides:
-Description: A ChonOS package of the Serial Port Emulator by https://github.com/chon-group/SerialPortEmulator
+Description: A simulator integration methodology based on serial channel emulation that fully decouples the agent’s reasoning from the environment, allowing flexible integration of simulators.
